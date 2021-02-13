@@ -1,11 +1,8 @@
-'''
+"""
 
-This is a ssh server designed to listen for sftp connections
-This code came from:
+Base code from https://searchcode.com/codesearch/raw/53300304/
 
-base code came from - https://searchcode.com/codesearch/raw/53300304/
-
-'''
+"""
 
 import os
 import paramiko
@@ -14,7 +11,7 @@ import sys
 import threading
 import time
 from common import helpers
-from StringIO import StringIO
+from io import StringIO
 from protocols.servers.serverlibs.sftp import sftp_classes
 
 
@@ -24,7 +21,7 @@ class Server:
         self.protocol = "sftp"
         self.username = cli_object.username
         self.password = cli_object.password
-        self.sftp_directory = helpers.ea_path() + '/data'
+        self.sftp_directory = helpers.ea_path() + '/transfer'
         if cli_object.server_port:
             self.port = int(cli_object.server_port)
         else:
@@ -59,11 +56,11 @@ Myw1d5t46XP97y6Szrhcsrt15pmSKD+zLYXD26qoxKJOP9a6+A==
 -----END RSA PRIVATE KEY-----
 """
 
-    def accept_client(
-            self, client, addr, root_dir, users, host_rsa_key, password):
+    @staticmethod
+    def accept_client(client, addr, root_dir, users, host_rsa_key, password):
         usermap = {}
-        for u in users:
-            usermap[u.username] = u
+        for user in users:
+            usermap[user.username] = user
 
         host_key_file = StringIO(host_rsa_key)
         host_key = paramiko.RSAKey(file_obj=host_key_file)
@@ -72,14 +69,13 @@ Myw1d5t46XP97y6Szrhcsrt15pmSKD+zLYXD26qoxKJOP9a6+A==
         transport.add_server_key(host_key)
 
         impl = sftp_classes.SimpleSftpServer
-        transport.set_subsystem_handler(
-            "sftp", paramiko.SFTPServer, sftp_si=impl, transport=transport,
-            fs_root=root_dir, users=usermap)
+        transport.set_subsystem_handler("sftp", paramiko.SFTPServer, sftp_si=impl, transport=transport,
+                                        fs_root=root_dir, users=usermap)
 
         server = sftp_classes.SimpleSSHServer(users=usermap)
         transport.start_server(server=server)
         channel = transport.accept()
-        while(transport.is_active()):
+        while transport.is_active():
             time.sleep(3)
 
         username = server.get_authenticated_user()
@@ -89,27 +85,26 @@ Myw1d5t46XP97y6Szrhcsrt15pmSKD+zLYXD26qoxKJOP9a6+A==
         return
 
     def serve(self):
-
-        loot_path = os.path.join(helpers.ea_path(), "data") + "/"
+        loot_path = os.path.join(helpers.ea_path(), 'transfer') + "/"
         # Check to make sure the agent directory exists, and a loot
-        # directory for the agent.  If not, make them
+        # directory for the agent. If not, make them
         if not os.path.isdir(loot_path):
             os.makedirs(loot_path)
 
-        user_map = [sftp_classes.User(
-            username=self.username, password=self.password, chroot=False), ]
+        user_map = [sftp_classes.User(username=self.username, password=self.password, chroot=False), ]
 
-        print "[*] Starting SFTP server..."
+        print(f'[*] Starting an SFTP server on port {self.port}.')
 
         try:
             server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             server_socket.bind(('0.0.0.0', self.port))
             server_socket.listen(10)
         except socket.error:
-            print "[*] Error: Port in use! Please restart when port {} is free!".format(self.port)
+            print(f'[*] Error: Port {self.port} is currently in use.')
             sys.exit()
 
-        print "[*] SFTP server started!\n"
+        print(f'[*] Starting an SFTP server on port {self.port}.')
+
 
         while True:
             try:
@@ -120,7 +115,5 @@ Myw1d5t46XP97y6Szrhcsrt15pmSKD+zLYXD26qoxKJOP9a6+A==
                 t.daemon = True
                 t.start()
             except KeyboardInterrupt:
-                print "[*] Shutting down SFTP server..."
+                print('[*] Shutting down the SFTP server.')
                 sys.exit()
-
-        return

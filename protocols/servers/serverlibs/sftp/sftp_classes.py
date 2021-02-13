@@ -4,8 +4,7 @@ import paramiko
 import tempfile
 import threading
 import time
-from StringIO import StringIO
-
+from io import StringIO
 
 
 class User(object):
@@ -15,9 +14,9 @@ class User(object):
         self.password = password
         self.chroot = chroot
         self.public_key = public_key
-        if type(self.public_key) in (str, unicode):
-            bits = base64.decodestring(self.public_key.split(' ')[1])
-            msg = paramiko.Message(bits)
+        if type(self.public_key) in (str, str):
+            bits = base64.decodebytes(self.public_key.key(' ')[1])
+            msg = paramiko.Message(str(bits))
             key = paramiko.RSAKey(msg)
             self.public_key = key
 
@@ -30,7 +29,7 @@ class SFTPHandle(paramiko.SFTPHandle):
     def __init__(self, flags=0, path=None):
         paramiko.SFTPHandle.__init__(self, flags)
         self.path = path
-        if(flags == 0):
+        if flags == 0:
             self.readfile = open(path, "r")
         else:
             self.writefile = open(path, "w")
@@ -40,7 +39,7 @@ class SvnSFTPHandle(SFTPHandle):
     def __init__(self, flags=0, path=None):
         paramiko.SFTPHandle.__init__(self, flags)
         self.path = path
-        if(flags == 0):
+        if flags == 0:
             self.readfile = open(path, "r")
         else:
             self.writefile = open(path, "w")
@@ -51,38 +50,39 @@ class SvnSFTPHandle(SFTPHandle):
         writefile = getattr(self, 'writefile', None)
         if writefile is not None:
             writefile.close()
-            os.system("svn add %s" % self.path)
-            os.system("svn commit -m 'auto add' %s" % (self.path))
+            os.system(f"svn add {self.path}")
+            os.system(f"svn commit -m 'auto add' {self.path}")
 
 
 class SimpleSftpServer(paramiko.SFTPServerInterface):
     def __init__(self, server, transport, fs_root, users, *largs, **kwargs):
+        super().__init__(server, *largs, **kwargs)
         self.transport = transport
         self.root = fs_root
         self.user_name = self.transport.get_username()
         self.users = users
 
         if self.users[self.user_name].chroot:
-            self.root = "%s/%s" % (self.root, self.users[self.user_name].home)
+            self.root = "{0}/{1}".format(self.root, self.users[self.user_name].home)
 
     def get_fs_path(self, sftp_path):
-        real_path = "%s/%s" % (self.root, sftp_path)
+        real_path = "{0}/{1}".format(self.root, sftp_path)
         real_path = real_path.replace('//', '/')
 
         if not os.path.realpath(real_path).startswith(self.root):
             raise Exception("Invalid path")
 
-        return(real_path)
+        return real_path
 
     def open(self, path, flags, attr):
         real_path = self.get_fs_path(path)
-        return(SFTPHandle(flags, real_path))
+        return SFTPHandle(flags, real_path)
 
     def list_folder(self, path):
         real_path = self.get_fs_path(path)
         rc = []
         for filename in os.listdir(real_path):
-            full_name = ("%s/%s" % (real_path, filename)).replace("//", "/")
+            full_name = ("{0}/{1}".format(real_path, filename)).replace("//", "/")
             rc.append(paramiko.SFTPAttributes.from_stat(os.stat(full_name), filename.replace(self.root, '')))
         return rc
 
@@ -129,19 +129,19 @@ class SubversionSftpServer(SimpleSftpServer):
 
     def open(self, path, flags, attr):
         real_path = self.get_fs_path(path)
-        return(SvnSFTPHandle(flags, real_path))
+        return SvnSFTPHandle(flags, real_path)
 
     def remove(self, path):
         real_path = self.get_fs_path(path)
-        os.system("svn del %s" % real_path)
-        os.system("svn commit -m 'auto commit for %s' %s" % (self.user_name, real_path))
+        os.system('svn del {}'.format(real_path))
+        os.system("svn commit -m 'auto commit for {0}' {1}".format(self.user_name, real_path))
         return 0
 
     def rename(self, oldpath, newpath):
         real_oldpath = SimpleSftpServer.get_fs_path(self, oldpath)
         real_newpath = SimpleSftpServer.get_fs_path(self, newpath)
-        os.system("svn mv %s %s" % (real_oldpath, real_newpath))
-        os.system("svn commit -m 'auto commit for %s' %s %s" % (self.user_name, real_oldpath, real_newpath))
+        os.system("svn mv {0} {1}".format(real_oldpath, real_newpath))
+        os.system("svn commit -m 'auto commit for {0}' {1} {2}".format(self.user_name, real_oldpath, real_newpath))
         return 0
 
 
@@ -150,11 +150,11 @@ class IntegrationTestSftpServer(SimpleSftpServer):
         SimpleSftpServer.__init__(self, *largs, **kwargs)
 
         tempdir = tempfile.mkdtemp()
-        os.system("cp -r %s/* %s" % (self.root, tempdir))
+        os.system(f"cp -r {self.root}/* {tempdir}")
         self.root = tempdir
 
     def session_ended(self):
-        os.system("rm -rf %s" % self.root)
+        os.system(f"rm -rf {self.root}")
 
 
 class SimpleSSHServer(paramiko.ServerInterface):
@@ -202,7 +202,7 @@ def accept_client(client, addr, root_dir, users, host_rsa_key, conf={}):
     transport.load_server_moduli()
     transport.add_server_key(host_key)
 
-    if conf.has_key("sftp_implementation"):
+    if "sftp_implementation" in conf:
         mod_name, class_name = conf['sftp_implementation'].split(':')
         fromlist = None
         try:
@@ -220,10 +220,10 @@ def accept_client(client, addr, root_dir, users, host_rsa_key, conf={}):
     server = SimpleSSHServer(users=usermap)
     transport.start_server(server=server)
     channel = transport.accept()
-    while(transport.is_active()):
+    while transport.is_active():
         time.sleep(3)
 
     username = server.get_authenticated_user()
     if username is not None:
         user = usermap[username]
-        os.system("svn commit -m 'committing user session for %s' %s" % (username, root_dir + "/" + user.home))
+        os.system("svn commit -m 'committing user session for {0}' {1}".format(username, root_dir + "/" + user.home))

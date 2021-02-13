@@ -1,16 +1,17 @@
-'''
+"""
 
 This module generates darkhotel traffic.
 
 Resources:
 https://securelist.com/blog/research/66779/the-darkhotel-apt/
 
-'''
+"""
 
 import random
 import sys
-import urllib
-import urllib2
+import urllib.error
+import urllib.parse
+import urllib.request
 
 
 class Actor:
@@ -47,43 +48,43 @@ class Actor:
         selected_checkin_domain = random.choice(self.checkin_domains)
         darkhotel_headers['Host'] = selected_checkin_domain
 
-        get_request = urllib2.Request(
+        get_request = urllib.request.Request(
             "http://" + self.egress_server + "/major/images/view.php",
             headers=darkhotel_headers)
 
         try:
-            urllib2.urlopen(get_request)
-        except urllib2.URLError:
-            print "[*] Error: Cannot connect to darkhotel data exfil server!"
-            print "[*] Error: Possible firewall, or proxy prventing this?"
+            urllib.request.urlopen(get_request)
+        except urllib.error.URLError:
+            print("[*] Error: Cannot connect to darkhotel data exfil server!")
+            print("[*] Error: Possible firewall, or proxy prventing this?")
             sys.exit(1)
 
-        get_request2 = urllib2.Request(
+        get_request2 = urllib.request.Request(
             "http://" + self.egress_server + "/major/txt/read.php",
             headers=darkhotel_headers)
 
         try:
-            urllib2.urlopen(get_request2)
-        except urllib2.URLError:
-            print "[*] Error: Cannot connect to darkhotel data exfil server!"
-            print "[*] Error: Possible firewall, or proxy prventing this?"
+            urllib.request.urlopen(get_request2)
+        except urllib.error.URLError:
+            print('[*] Error: Cannot connect to darkhotel data exfil server!')
+            print('[*] Error: Possible firewall, or proxy prventing this?')
             sys.exit(1)
 
         # Iterate over get and post request 5 times
-        for times_requested in xrange(1, 6):
+        for times_requested in range(1, 6):
             selected_domain = random.choice(self.domains)
             darkhotel_headers['Host'] = selected_domain
             darkhotel_uri = random.choice(self.uris)
 
-            get_req2 = urllib2.Request(
+            get_req2 = urllib.request.Request(
                 "http://" + self.egress_server + darkhotel_uri, headers=darkhotel_headers)
 
             try:
-                urllib2.urlopen(get_req2)
-            except urllib2.URLError:
-                print "[*] Error: Cannot connect to darkhotel data exfil server!"
-                print "[*] Error: Possible firewall, or proxy prventing this?"
-                print "URI == " + darkhotel_uri
+                urllib.request.urlopen(get_req2)
+            except urllib.error.URLError:
+                print('[*] Error: Cannot connect to darkhotel data exfil server!')
+                print('[*] Error: Possible firewall, or proxy prventing this?')
+                print(f'URI == {darkhotel_uri}')
 
-        print "[*] INFO: DarkHotel C2 comms complete!"
+        print("[*] INFO: DarkHotel C2 comms complete!")
         return

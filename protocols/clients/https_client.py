@@ -1,12 +1,13 @@
-'''
+"""
 
 This is the web client code
 
-'''
+"""
 
 import ssl
 import sys
-import urllib2
+import urllib.request
+import urllib.error
 
 
 class Client:
@@ -14,11 +15,12 @@ class Client:
     def __init__(self, cli_object):
         self.data_to_transmit = ''
         self.remote_server = cli_object.ip
-        self.protocol = "https"
+        self.protocol = 'https'
         if cli_object.client_port is None:
             self.port = 443
         else:
             self.port = cli_object.client_port
+
         if cli_object.file is None:
             self.file_transfer = False
         else:
@@ -31,28 +33,27 @@ class Client:
 
         ssl._create_default_https_context = ssl._create_unverified_context
         if not self.file_transfer:
-            url = "https://" + self.remote_server + ":" + str(self.port) + "/post_data.php"
+            url = 'https://' + self.remote_server + ':' + str(self.port) + '/post_file.php'
 
             # Post the data to the web server at the specified URL
             try:
-                f = urllib2.urlopen(url, data_to_transmit)
-                f.close()
-                print "[*] File sent!!!"
-            except urllib2.URLError:
-                print "[*] Error: Web server may not be active on " + self.remote_server
-                print "[*] Error: Please check server to make sure it is active!"
+                file = urllib.request.urlopen(url, data_to_transmit)
+                file.close()
+                print('[*] File sent')
+            except urllib.error.URLError:
+                print(f'[*] Error: Web server may not be active on {self.remote_server}')
+                print('[*] Error: Please check server to make sure it is active!')
                 sys.exit()
         else:
-            url = "https://" + self.remote_server + ":" + str(self.port) + "/post_file.php"
+            url = 'https://' + self.remote_server + ':' + str(self.port) + '/post_file.php'
 
             try:
-                data_to_transmit = self.file_transfer + ".:::-989-:::." + data_to_transmit
-                f = urllib2.urlopen(url, data_to_transmit)
-                f.close()
-                print "[*] File sent!!!"
-            except urllib2.URLError:
-                print "[*] Error: Web server may not be active on " + self.remote_server
-                print "[*] Error: Please check server to make sure it is active!"
+                data_to_transmit = bytes(self.file_transfer, encoding='utf-8') + b".:::-989-:::." + data_to_transmit
+                file = urllib.request.urlopen(url, data_to_transmit)
+                file.close()
+                print('[*] File sent')
+            except urllib.error.URLError:
+                print(f'[*] Error: Web server may not be active on {self.remote_server}')
+                print('[*] Error: Please check server to make sure it is active!')
+                print(f'[*] Error: Please add --client-port port if the server is not on 443')
                 sys.exit()
-
-        return

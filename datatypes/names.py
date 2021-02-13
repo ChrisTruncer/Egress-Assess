@@ -1,8 +1,8 @@
-'''
+"""
 
 This module creates names, addresses, and SSNs.
 
-'''
+"""
 
 import random
 from common import helpers
@@ -19,10 +19,10 @@ class Datatype:
     # The __init__ has full access to all command line parameters passed
     # in at runtime.
     def __init__(self, cli_object):
-        self.cli = "identity"
+        self.cli = 'identity'
         self.datasize = int(cli_object.data_size)
-        self.description = "Full names, Addresses, and Socials"
-        self.filetype = "text"
+        self.description = 'Full names, Addresses, and Socials'
+        self.filetype = 'text'
         self.first_names = [
             'michael', 'john', 'david', 'chris', 'mike', 'james',
             'mark', 'jason', 'robert', 'jessica', 'sarah', 'jennifer',
@@ -86,8 +86,9 @@ class Datatype:
             '658 Market Street New Brunswick, NJ 08901'
         ]
 
-    def create_ssn(self):
-        ssn = helpers.randomNumbers(9)
+    @staticmethod
+    def create_ssn():
+        ssn = helpers.random_numbers(9)
         ssn = ssn[0:3] + "-" + ssn[3:5] + "-" + ssn[5:9]
         return ssn
 

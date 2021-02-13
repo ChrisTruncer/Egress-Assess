@@ -1,16 +1,6 @@
-'''
-
-A brief description of the server module can be placed up here
-All import should go between the comments and class declaration
-If you have a question, feel free to check out the other server
-modules ot just hit me up.
-
-Finally, be sure to rename this to a .py file
-
-'''
-
 import base64
 import time
+from scapy.layers.inet import ICMP
 from common import helpers
 from scapy.all import *
 
@@ -18,13 +8,12 @@ from scapy.all import *
 class Server:
 
     def __init__(self, cli_object):
-        self.protocol = "icmp"
+        self.protocol = 'icmp'
         self.file_name = ''
         self.last_packet = ''
         self.loot_path = ''
 
-    def customAction(self, packet):
-
+    def custom_action(self, packet):
         if packet.haslayer(ICMP):
             if packet.haslayer(Raw):
                 icmp_strings = repr(packet[Raw])
@@ -33,18 +22,16 @@ class Server:
                     if incoming_data == self.last_packet:
                         pass
                     else:
-                        if ".:::-989-:::." in incoming_data:
-                            file_name = incoming_data.split(".:::-989-:::.")[0]
-                            file_data = incoming_data.split(".:::-989-:::.")[1]
+                        if b".:::-989-:::." in incoming_data:
+                            file_name = incoming_data.split(b".:::-989-:::.")[0].decode('utf-8')
+                            file_data = incoming_data.split(b".:::-989-:::.")[1].decode('utf-8')
                             helpers.received_file(file_name)
-                            with open(self.loot_path + file_name, 'a') as\
-                                    icmp_out:
+                            with open(self.loot_path + file_name, 'a') as icmp_out:
                                 icmp_out.write(file_data)
                             self.last_packet = incoming_data
                         else:
                             helpers.received_file(self.file_name)
-                            with open(self.loot_path + self.file_name, 'a') as\
-                                    icmp_out:
+                            with open(self.loot_path + self.file_name, 'a') as icmp_out:
                                 icmp_out.write(incoming_data)
                             self.last_packet = incoming_data
                 except TypeError:
@@ -54,10 +41,9 @@ class Server:
         return
 
     def serve(self):
-
-        self.loot_path = os.path.join(helpers.ea_path(), "data") + "/"
+        self.loot_path = os.path.join(helpers.ea_path(), 'transfer') + '/'
         # Check to make sure the agent directory exists, and a loot
-        # directory for the agent.  If not, make them
+        # directory for the agent. If not, make them
         if not os.path.isdir(self.loot_path):
             os.makedirs(self.loot_path)
 
@@ -67,6 +53,5 @@ class Server:
         self.file_name = current_date.replace("/", "") +\
             "_" + current_time.replace(":", "") + "text_data.txt"
 
-        print "[*] ICMP server/sniffer started!"
-        sniff(prn=self.customAction)
-        return
+        print('[*] Starting an ICMP server/sniffer.')
+        sniff(prn=self.custom_action)

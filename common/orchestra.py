@@ -1,8 +1,8 @@
-'''
+"""
 
 This is the conductor which controls everything
 
-'''
+"""
 
 import glob
 import imp
@@ -35,14 +35,12 @@ class Conductor:
             if name.endswith(".py") and ("__init__" not in name):
                 loaded_server_proto = imp.load_source(name.replace("/", ".").rstrip('.py'), name)
                 self.server_protocols[name] = loaded_server_proto.Server(command_line_object)
-        return
 
     def load_datatypes(self, command_line_object):
         for name in glob.glob('datatypes/*.py'):
             if name.endswith(".py") and ("__init__" not in name):
                 loaded_datatypes = imp.load_source(name.replace("/", ".").rstrip('.py'), name)
                 self.datatypes[name] = loaded_datatypes.Datatype(command_line_object)
-        return
 
     def load_actors(self, command_line_object):
         for name in glob.glob('commandcontrol/malware/*.py'):
@@ -53,4 +51,3 @@ class Conductor:
             if name.endswith(".py") and ("__init__" not in name):
                 loaded_actors = imp.load_source(name.replace("/", ".").rstrip('.py'), name)
                 self.actor_modules[name] = loaded_actors.Actor(command_line_object)
-        return

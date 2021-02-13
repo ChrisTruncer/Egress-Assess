@@ -43,7 +43,7 @@ Then, to send data to the FTP server, and to specifically send 15 megs of credit
 
 Other things of note:
 - dns_complete is an improved version of the DNS Server module. Using DNSLib, this module can listen and respond to requests from both TXT and A records, decode the requests utilizing the correct format, and write the output to a file.
-- SMB has an option for SMB2 support or not. Newer Windows10 systems typically have SMBv1 disabled. So use the SMB2 switch on the server side and recommend using a username and password as well.
+- SMB has an option for SMB2 support or not. Newer Windows10 systems typically have SMBv1 disabled. For this reason SMBv2 is the default, you can use the switch to disable SMBv2.
 
 
 How the Protocols Attempt Exfil
@@ -61,7 +61,7 @@ How the Protocols Attempt Exfil
 
 - HTTP(S) - Data and files are sent via a POST web request to the EgressAssess web server. For the Python client, the data is posted to http(s)://<IP or FQDN>/post_data.php and for the PowerShell Client the data is posted to http(s)://<IP or FQDN>/posh_file.php.
 
-- SMB - The EgressAssess Server (using Impacket's SimpleSMBserver) creates a /data SMB Share. The client system connects to the share with no authentication and transfers the file. Just like connecting to a network share and copying a file over. There is the option to add a username and password for authentication as well if desired. As noted above, determine which system you are egressing from and their security policies to see if you can use the old vulnerable SMBv1 or need to enable SMBv2
+- SMB - The EgressAssess Server (using Impacket's SimpleSMBserver) creates a /TRANSFER SMB Share. The client system connects to the share with no authentication and transfers the file. Just like connecting to a network share and copying a file over. There is the option to add a username and password for authentication as well if desired. As noted above, determine which system you are egressing from and their security policies to see if you can use the old vulnerable SMBv1 or need to enable SMBv2
 
 - DNS_TXT - Data and files are broken up into bytes and then converted to base64 and chunked into separate DNS TXT queries that are made at an IP address or Domain Name. The client attempts to connect directly to the EgressAssess Server and makes the DNS TXT query. The Server then filters the data out of the packets and decodes the data. In the PowerShell Client there is an option for Stacked queries. This will make up to 7 TXT queries in each DNS request at the server which increases the speed at which the data is exfilled.
 

@@ -3,4 +3,14 @@
 *.pyc
 *.pem
 data/
+transfer/
 *.swp
+*.idea
+*.vscode
+venv
+.mypy_cache
+.pytest_cache
+build/
+dist/
+.DS_Store
+

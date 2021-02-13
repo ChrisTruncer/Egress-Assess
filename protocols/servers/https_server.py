@@ -1,9 +1,3 @@
-'''
-
-This is the code for the web server
-
-'''
-
 import os
 import socket
 import ssl
@@ -17,7 +11,7 @@ from threading import Thread
 class Server:
 
     def __init__(self, cli_object):
-        self.protocol = "https"
+        self.protocol = 'https'
         if cli_object.server_port:
             self.port = int(cli_object.server_port)
         else:
@@ -25,14 +19,13 @@ class Server:
 
     def serve(self):
         try:
-            print "[*] Starting web (https) server..."
-            # bind to all interfaces
+            print(f'[*] Starting an HTTPS server on port {self.port}.')
+            # Bind to all interfaces
             Thread(target=self.serve_on_port).start()
-            print "[*] Web server is currently running"
-            print "[*] Type \"kill -9 " + str(os.getpid()) + "\" to stop the web server."
-        # handle keyboard interrupts
+            print('[*] The server is running.')
+        # Handle keyboard interrupts
         except KeyboardInterrupt:
-            print "[!] Rage quiting, and stopping the web server!"
+            print('[*] Shutting down the HTTPS server.')
         return
 
     def serve_on_port(self):
@@ -40,12 +33,10 @@ class Server:
             cert_path = helpers.ea_path() +\
                 '/protocols/servers/serverlibs/web/server.pem'
             server = threaded_http.ThreadingHTTPServer(
-                ("0.0.0.0", self.port), base_handler.GetHandler)
+                ('0.0.0.0', self.port), base_handler.GetHandler)
             server.socket = ssl.wrap_socket(
                 server.socket, certfile=cert_path, server_side=True)
             server.serve_forever()
         except socket.error:
-            print "[*][*] Error: Port %d is currently in use!" % self.port
-            print "[*][*] Error: Please restart when port is free!\n"
+            print(f'[*] Error: Port {self.port} is currently in use.')
             sys.exit()
-        return

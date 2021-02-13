@@ -1,15 +1,15 @@
-'''
+"""
 
 This module generates etumbot traffic.
 
 Resources:
 https://github.com/rsmudge/Malleable-C2-Profiles/blob/master/APT/etumbot.profile
 
-'''
+"""
 
 import random
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 
 class Actor:
@@ -65,32 +65,32 @@ class Actor:
         selected_domain = random.choice(self.domains)
         etumbot_headers['Host'] = selected_domain
 
-        get_request = urllib2.Request(
+        get_request = urllib.request.Request(
             "http://" + self.egress_server + "/home/index.asp?typeid=13",
             headers=etumbot_headers)
 
         try:
-            urllib2.urlopen(get_request)
-        except urllib2.URLError:
-            print "[*] Error: Cannot connect to etumbot data exfil server!"
-            print "[*] Error: Possible firewall, or proxy prventing this?"
+            urllib.request.urlopen(get_request)
+        except urllib.error.URLError:
+            print("[*] Error: Cannot connect to etumbot data exfil server!")
+            print("[*] Error: Possible firewall, or proxy prventing this?")
             sys.exit(1)
 
         # Iterate over get and post request 5 times
-        for times_requested in xrange(1, 6):
+        for times_requested in range(1, 6):
             selected_domain = random.choice(self.domains)
             etumbot_headers['Host'] = selected_domain
             etumbot_uri = random.choice(self.uris)
 
-            get_req2 = urllib2.Request(
+            get_req2 = urllib.request.Request(
                 "http://" + self.egress_server + etumbot_uri, headers=etumbot_headers)
 
             try:
-                urllib2.urlopen(get_req2)
-            except urllib2.URLError:
-                print "[*] Error: Cannot connect to etumbot data exfil server!"
-                print "[*] Error: Possible firewall, or proxy prventing this?"
-                print "URI == " + etumbot_uri
+                urllib.request.urlopen(get_req2)
+            except urllib.error.URLError:
+                print("[*] Error: Cannot connect to etumbot data exfil server!")
+                print("[*] Error: Possible firewall, or proxy prventing this?")
+                print("URI == " + etumbot_uri)
 
-        print "[*] INFO: Etumbot C2 comms complete!"
+        print("[*] INFO: Etumbot C2 comms complete!")
         return
